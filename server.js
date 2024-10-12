@@ -5,7 +5,8 @@ import connectDB from "./config/db.js";
 import bodyParser from "body-parser";
 import cors from "cors";
 import blogRoutes from "./routes/blogRoutes.js";
-
+import contactRoutes from "./routes/contactRoutes.js";
+import faqRoutes from "./routes/faqRoutes.js";
 dotenv.config();
 const port = process.env.PORT || 8000;
 
@@ -25,7 +26,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/api/blogs", blogRoutes);
-
+app.use("/api/contacts", contactRoutes);
+app.use("/api/faq", faqRoutes);
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
