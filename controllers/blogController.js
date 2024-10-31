@@ -1,5 +1,5 @@
 import BlogPost from "../models/blogModal.js";
-
+import slugify from "slugify";
 export const createBlog = async (req, res) => {
   try {
     const {
@@ -14,21 +14,18 @@ export const createBlog = async (req, res) => {
       metaTags,
       status,
     } = req.body;
-
-    // Validate featuredImage structure if provided
+    console.log(req.body, "req.body");
     if (featuredImage && (!featuredImage.url || !featuredImage.position)) {
       return res.status(400).json({
         message: "Featured image must include url and position",
       });
     }
 
-    // Validate images array if provided
     if (images && !images.every((img) => img.url && img.position)) {
       return res.status(400).json({
         message: "All images must include url and position",
       });
     }
-
     const slug = slugify(title, { lower: true });
     console.log(slug, "slug");
     const newPost = new BlogPost({
@@ -62,16 +59,15 @@ export const uploadImage = async (req, res) => {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    // Get additional image metadata from request body
     const { altText, caption, position } = req.body;
 
     const imageData = {
       url: req.file.path,
       altText: altText || "",
       caption: caption || "",
-      position: position || "inline", // default to inline if not specified
+      position: position || "inline",
     };
-
+    console.log(imageData, "imageData");
     res.status(200).json({
       ...imageData,
       message: "Image uploaded successfully",
