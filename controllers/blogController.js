@@ -1,24 +1,34 @@
 import BlogPost from "../models/blogModal.js";
 
-export const createBlogs = async (req, res) => {
+export const createBlog = async (req, res) => {
   try {
-    const { title, content, author, tags, readMoreLink, subHeadings } =
-      req.body;
-
-    const newPost = new BlogPost({
+    const {
       title,
       content,
+      excerpt,
       author,
       tags,
-      readMoreLink,
-      subHeadings: subHeadings.map((subHeading) => ({
-        title: subHeading.title,
-        content: subHeading.content,
-        keyPoints: subHeading.keyPoints.map((keyPoint) => ({
-          title: keyPoint.title,
-          content: keyPoint.content,
-        })),
-      })),
+      featuredImage,
+      images,
+      internalLinks,
+      metaTags,
+      status,
+    } = req.body;
+    console.log(req.body, "req.body");
+    const slug = slugify(title, { lower: true });
+    console.log(slug, "slug");
+    const newPost = new BlogPost({
+      title,
+      slug,
+      content,
+      excerpt,
+      author,
+      tags,
+      featuredImage,
+      images,
+      internalLinks,
+      metaTags,
+      status,
     });
 
     const savedPost = await newPost.save();
@@ -26,6 +36,40 @@ export const createBlogs = async (req, res) => {
       status: 201,
       data: savedPost,
       message: "Blog post created successfully!",
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const uploadImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    res.status(200).json({
+      url: req.file.path,
+      message: "Image uploaded successfully",
+    });
+    console.log(req.file.path, "req.file.path");
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const getBlogPostBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const post = await BlogPost.findOne({ slug });
+
+    if (!post) {
+      return res.status(404).json({ message: "Blog post not found" });
+    }
+
+    res.status(200).json({
+      status: 200,
+      data: post,
     });
   } catch (error) {
     res.status(400).json({ message: error.message });

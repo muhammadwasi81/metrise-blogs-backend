@@ -1,15 +1,17 @@
 import express from "express";
 import {
-  createBlogs,
+  createBlog,
   getAllBlog,
   getBlogPostById,
   updateBlogPost,
   deleteBlogPost,
+  uploadImage,
 } from "../controllers/blogController.js";
-
+import { upload } from "../config/cloudinaryConfig.js";
 const router = express.Router();
 
-router.post("/create-blog", createBlogs);
+router.post("/create-blog", createBlog);
+router.post("/upload-image", upload.single("image"), uploadImage);
 router.get("/get-blogs", getAllBlog);
 router.get("/get-blog/:id", getBlogPostById);
 router.put("/update-blog/:id", updateBlogPost);
