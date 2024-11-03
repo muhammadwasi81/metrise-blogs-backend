@@ -1,44 +1,33 @@
 import BlogPost from "../models/blogModal.js";
 import slugify from "slugify";
-export const createBlog = async (req, res) => {
+
+export const createBlogs = async (req, res) => {
   try {
-    const {
-      title,
-      content,
-      excerpt,
-      author,
-      tags,
-      featuredImage,
-      images,
-      internalLinks,
-      metaTags,
-      status,
-    } = req.body;
-    console.log(req.body, "req.body");
-    if (featuredImage && (!featuredImage.url || !featuredImage.position)) {
+    const { title, content, excerpt, author, tags, metaTags, status } =
+      req.body;
+
+    if (!req.file) {
       return res.status(400).json({
-        message: "Featured image must include url and position",
+        message: "Blog image is required",
       });
     }
 
-    if (images && !images.every((img) => img.url && img.position)) {
-      return res.status(400).json({
-        message: "All images must include url and position",
-      });
-    }
+    const image = {
+      url: req.file.path,
+      altText: req.body.altText || "",
+      caption: req.body.caption || "",
+    };
+
     const slug = slugify(title, { lower: true });
-    console.log(slug, "slug");
     const newPost = new BlogPost({
       title,
       slug,
       content,
       excerpt,
       author,
-      tags,
-      featuredImage,
-      images,
-      internalLinks,
-      metaTags,
+      tags: tags ? JSON.parse(tags) : [],
+      image,
+      metaTags: metaTags ? JSON.parse(metaTags) : {},
       status,
     });
 
@@ -47,30 +36,6 @@ export const createBlog = async (req, res) => {
       status: 201,
       data: savedPost,
       message: "Blog post created successfully!",
-    });
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-};
-
-export const uploadImage = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded" });
-    }
-
-    const { altText, caption, position } = req.body;
-
-    const imageData = {
-      url: req.file.path,
-      altText: altText || "",
-      caption: caption || "",
-      position: position || "inline",
-    };
-    console.log(imageData, "imageData");
-    res.status(200).json({
-      ...imageData,
-      message: "Image uploaded successfully",
     });
   } catch (error) {
     res.status(400).json({ message: error.message });

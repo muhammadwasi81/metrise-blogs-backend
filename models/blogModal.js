@@ -1,31 +1,6 @@
 import mongoose from "mongoose";
 
-const metaTagSchema = new mongoose.Schema({
-  title: String,
-  description: String,
-  keywords: [String],
-  ogImage: String,
-  ogTitle: String,
-  ogDescription: String,
-});
-
-const imageSchema = new mongoose.Schema({
-  url: String,
-  altText: String,
-  caption: String,
-  position: String, // inline, featured, gallery
-});
-
-const internalLinkSchema = new mongoose.Schema({
-  text: String,
-  targetPostId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Blogs",
-  },
-  displayText: String,
-});
-
-const blogPostSchema = new mongoose.Schema({
+const blogSchema = new mongoose.Schema({
   title: {
     type: String,
     required: true,
@@ -36,42 +11,54 @@ const blogPostSchema = new mongoose.Schema({
     unique: true,
   },
   content: {
-    type: String, // Rich text editor content in HTML/JSON format
+    type: String,
     required: true,
   },
   excerpt: {
     type: String,
     required: true,
   },
-  featuredImage: imageSchema,
-  images: [imageSchema],
-  internalLinks: [internalLinkSchema],
-  metaTags: metaTagSchema,
-  date: {
+  author: {
+    type: String,
+    required: true,
+  },
+  tags: [
+    {
+      type: String,
+    },
+  ],
+  image: {
+    url: {
+      type: String,
+      required: true,
+    },
+    altText: String,
+    caption: String,
+  },
+  metaTags: {
+    title: String,
+    description: String,
+    keywords: [String],
+  },
+  status: {
+    type: String,
+    enum: ["draft", "published"],
+    default: "draft",
+  },
+  createdAt: {
     type: Date,
     default: Date.now,
   },
-  author: {
-    type: String,
-    default: "Anonymous",
-  },
-  tags: [String],
-  status: {
-    type: String,
-    enum: ["draft", "published", "archived"],
-    default: "draft",
-  },
-  lastModified: {
+  updatedAt: {
     type: Date,
     default: Date.now,
   },
 });
 
-blogPostSchema.pre("save", function (next) {
-  this.lastModified = new Date();
+// Update the updatedAt timestamp before saving
+blogSchema.pre("save", function (next) {
+  this.updatedAt = Date.now();
   next();
 });
 
-const BlogPost = mongoose.model("Blogs", blogPostSchema);
-
-export default BlogPost;
+export default mongoose.model("BlogPost", blogSchema);
