@@ -39,6 +39,11 @@ const blogSchema = new mongoose.Schema({
     title: String,
     description: String,
     keywords: [String],
+    canonicalUrl: String,
+  },
+  previewText: {
+    type: String,
+    required: true,
   },
   status: {
     type: String,

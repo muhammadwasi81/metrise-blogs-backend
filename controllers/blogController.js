@@ -1,11 +1,24 @@
 import BlogPost from "../models/blogModal.js";
-import slugify from "slugify";
 
 export const createBlogs = async (req, res) => {
   try {
-    const { title, content, excerpt, author, tags, metaTags, status } =
-      req.body;
+    const {
+      title,
+      content,
+      excerpt,
+      author,
+      tags,
+      metaTags,
+      status,
+      slug,
+      previewText,
+    } = req.body;
 
+    if (!slug) {
+      return res.status(400).json({
+        message: "Slug is required",
+      });
+    }
     if (!req.file) {
       return res.status(400).json({
         message: "Blog image is required",
@@ -18,13 +31,13 @@ export const createBlogs = async (req, res) => {
       caption: req.body.caption || "",
     };
 
-    const slug = slugify(title, { lower: true });
     const newPost = new BlogPost({
       title,
       slug,
       content,
       excerpt,
       author,
+      previewText,
       tags: tags ? JSON.parse(tags) : [],
       image,
       metaTags: metaTags ? JSON.parse(metaTags) : {},
@@ -91,15 +104,29 @@ export const getBlogPostById = async (req, res) => {
 
 export const updateBlogPost = async (req, res) => {
   try {
+    const updates = { ...req.body };
+
+    if (typeof updates.metaTags === "string") {
+      updates.metaTags = JSON.parse(updates.metaTags);
+    }
+    if (typeof updates.tags === "string") {
+      updates.tags = JSON.parse(updates.tags);
+    }
+
     const updatedPost = await BlogPost.findByIdAndUpdate(
       req.params.id,
-      req.body,
-      { new: true }
+      updates,
+      { new: true, runValidators: true }
     );
+
     if (!updatedPost) {
       return res.status(404).json({ message: "Blog post not found" });
     }
-    res.json(updatedPost);
+    res.json({
+      status: 200,
+      data: updatedPost,
+      message: "Blog post updated successfully!",
+    });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
