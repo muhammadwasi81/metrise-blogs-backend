@@ -88,7 +88,8 @@ export const getAllBlog = async (req, res) => {
 
 export const getBlogPostById = async (req, res) => {
   try {
-    const post = await BlogPost.findById(req.params.id);
+    const postId = req.params.id;
+    const post = await BlogPost.findById(postId);
     if (!post) {
       return res.status(404).json({ message: "Blog post not found" });
     }
@@ -105,23 +106,51 @@ export const getBlogPostById = async (req, res) => {
 export const updateBlogPost = async (req, res) => {
   try {
     const updates = { ...req.body };
+    const postId = req.params.id;
 
-    if (typeof updates.metaTags === "string") {
-      updates.metaTags = JSON.parse(updates.metaTags);
-    }
-    if (typeof updates.tags === "string") {
-      updates.tags = JSON.parse(updates.tags);
-    }
-
-    const updatedPost = await BlogPost.findByIdAndUpdate(
-      req.params.id,
-      updates,
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedPost) {
+    const existingPost = await BlogPost.findById(postId);
+    if (!existingPost) {
       return res.status(404).json({ message: "Blog post not found" });
     }
+
+    if (updates.slug && updates.slug !== existingPost.slug) {
+      const slugExists = await BlogPost.findOne({
+        slug: updates.slug,
+        _id: { $ne: postId },
+      });
+      if (slugExists) {
+        return res.status(400).json({
+          message: "A blog post with this slug already exists",
+        });
+      }
+    }
+
+    if (req.file) {
+      updates.image = {
+        url: req.file.path,
+        altText: req.body.altText || "",
+        caption: req.body.caption || "",
+      };
+    }
+
+    try {
+      if (typeof updates.metaTags === "string") {
+        updates.metaTags = JSON.parse(updates.metaTags);
+      }
+      if (typeof updates.tags === "string") {
+        updates.tags = JSON.parse(updates.tags);
+      }
+    } catch (parseError) {
+      return res.status(400).json({
+        message: "Invalid JSON format for tags or metaTags",
+      });
+    }
+
+    const updatedPost = await BlogPost.findByIdAndUpdate(postId, updates, {
+      new: true,
+      runValidators: true,
+    });
+
     res.json({
       status: 200,
       data: updatedPost,
